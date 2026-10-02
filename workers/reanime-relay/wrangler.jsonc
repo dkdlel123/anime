@@ -4,5 +4,6 @@
   "main": "worker.mjs",
   "compatibility_date": "2026-10-02",
   "workers_dev": true,
+  "placement": {"region": "aws:ap-east-1"},
   "observability": {"enabled": false}
 }

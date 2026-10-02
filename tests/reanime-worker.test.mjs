@@ -47,7 +47,7 @@ test('Worker forwards only public Reanime metadata without client credentials or
   });
   assert.equal(response.status,200);assert.deepEqual(await response.json(),payload);
   assert.equal(call.url,'https://reanime.to/api/flix/178789/14');
-  assert.equal(call.init.redirect,'error');
+  assert.equal(call.init.redirect,'manual');
   assert.equal(new Headers(call.init.headers).has('Authorization'),false);
   assert.equal(new Headers(call.init.headers).has('Cookie'),false);
   assert.equal(response.headers.has('Set-Cookie'),false);
@@ -78,6 +78,22 @@ test('Worker preserves upstream failures and rejects challenge HTML or oversized
     [new Response('{}',{headers:{'Content-Type':'application/json','Content-Length':'99999999'}}),502]]) {
     const result=await handle(request(),env,async()=>response);
     assert.equal(result.status,status);assert.match((await result.json()).error,/Reanime|응답/);
+  }
+});
+
+test('Worker uses an edge-supported redirect mode and rejects redirects without following or forwarding them',async()=>{
+  const handle=await relay();
+  for(const status of [301,302,303,307,308]) {
+    let calls=0;
+    const response=await handle(request(),env,async(url,init)=>{
+      calls++;
+      assert.equal(init.redirect,'manual');
+      return new Response(null,{status,headers:{Location:'https://other.example/private'}});
+    });
+    assert.equal(calls,1);
+    assert.equal(response.status,502);
+    assert.equal(response.headers.has('Location'),false);
+    assert.match((await response.json()).error,new RegExp(`HTTP ${status}`));
   }
 });
 

@@ -67,7 +67,8 @@ export async function handleRequest(request, env, fetcher = fetch) {
   } catch {return failure(400, '잘못된 Reanime 조회 요청입니다.');}
   try {
     const upstream = await fetcher(`${ORIGIN}${metadataPath}`, {
-      headers: {Accept: 'application/json'}, redirect: 'error',
+      // workerd supports manual/follow only. Reject 3xx below without following Location.
+      headers: {Accept: 'application/json'}, redirect: 'manual',
       signal: AbortSignal.timeout(8000),
     });
     if (!upstream.ok) {
